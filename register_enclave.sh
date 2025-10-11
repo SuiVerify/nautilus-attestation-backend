@@ -10,6 +10,7 @@ ORIGINAL_PACKAGE_ID="0x5b1c4450aeb62e2eb6718b8446091045760d5d9a1c2695fbe5a1c20b7
 ENCLAVE_CONFIG_OBJECT_ID="0x6042e2f378fac25fdf5b8267d846c92a4a6f4b93a07520b49fc86a96014c92e1"
 CAP_OBJECT_ID="0x7fad1c5d1032fcdc3f8990a4d7c25d89c023ec47d31fe2ac4e5a65e0a9b199bd"
 ENCLAVE_URL="http://localhost:4000"
+# Current enclaveID needed for destroying = 0x7fad1c5d1032fcdc3f8990a4d7c25d89c023ec47d31fe2ac4e5a65e0a9b199bd
 
 echo "=== SuiVerify Nautilus Enclave Registration ==="
 echo "Package ID: $ENCLAVE_PACKAGE_ID"
