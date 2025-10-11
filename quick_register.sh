@@ -4,14 +4,14 @@
 # Uses the deployed contract details from transaction GfVdQBof37WFQJzJ39JCUjitqPa6KsB6D13HGa6NoUn2
 
 # Deployed contract details - Hardcoded from deployment
-PACKAGE_ID="0x106e1ebf3dc76ef2fecd1d72275bfae0a265144b266495f61e2a4c3b00193764"
-ENCLAVE_CONFIG_ID="0x3dea6c7ec46b60f07f2f3cdd82848836b38a0ffe5b0b7566227aa71c02934671"
-CAP_OBJECT_ID="0xd3a9e73d75743164b75f8a73e5aa75a0dac5aed9c42b6a81a856dbec1e5abcff"
+PACKAGE_ID="0x5b1c4450aeb62e2eb6718b8446091045760d5d9a1c2695fbe5a1c20b7d13006d"
+ENCLAVE_CONFIG_ID="0x6042e2f378fac25fdf5b8267d846c92a4a6f4b93a07520b49fc86a96014c92e1"
+CAP_OBJECT_ID="0x7fad1c5d1032fcdc3f8990a4d7c25d89c023ec47d31fe2ac4e5a65e0a9b199bd"
 ENCLAVE_URL="http://localhost:4000"
 
 echo "=== Quick SuiVerify Enclave Registration ==="
 echo "📋 Using deployed contract: $PACKAGE_ID"
-echo "🔗 Transaction: GsMJs8VGfm3tDpbELuj9yjZB3a1cvLjQtSxex5dRQS3D"
+echo "🔗 Transaction: 36VqYReFbmh93RnCu5xboR94BRv9jccJf1d2pw9vBVtm"
 echo ""
 
 # Check if attestation backend is accessible

@@ -41,12 +41,12 @@ make
 
 ## 📋 Deployed Contract Details
 
-**Package ID**: `0x106e1ebf3dc76ef2fecd1d72275bfae0a265144b266495f61e2a4c3b00193764`  
-**Transaction**: `GsMJs8VGfm3tDpbELuj9yjZB3a1cvLjQtSxex5dRQS3D`
+**Package ID**: `0x5b1c4450aeb62e2eb6718b8446091045760d5d9a1c2695fbe5a1c20b7d13006d`  
+**Transaction**: `36VqYReFbmh93RnCu5xboR94BRv9jccJf1d2pw9vBVtm`
 
 ### Auto-Created Enclave Objects (via init())
-- **EnclaveConfig**: `0x3dea6c7ec46b60f07f2f3cdd82848836b38a0ffe5b0b7566227aa71c02934671`
-- **Cap**: `0xd3a9e73d75743164b75f8a73e5aa75a0dac5aed9c42b6a81a856dbec1e5abcff`
+- **EnclaveConfig**: `0x6042e2f378fac25fdf5b8267d846c92a4a6f4b93a07520b49fc86a96014c92e1`
+- **Cap**: `0x7fad1c5d1032fcdc3f8990a4d7c25d89c023ec47d31fe2ac4e5a65e0a9b199bd`
 
 ### Other Contract Objects  
 - **DID Registry**: `0x2c6962f40c84a7df1d40c74ab05c7f60c9afdbae8129cfe507ced948a02cbdc4`
