@@ -17,26 +17,27 @@ echo "Original Package ID: $ORIGINAL_PACKAGE_ID"
 echo "Enclave Config ID: $ENCLAVE_CONFIG_OBJECT_ID"
 echo "Cap Object ID: $CAP_OBJECT_ID"
 echo "Enclave URL: $ENCLAVE_URL"
-echo ""
 echo "📋 Deployment Info:"
 echo "  Contract: 0x106e1ebf3dc76ef2fecd1d72275bfae0a265144b266495f61e2a4c3b00193764"
 echo "  Transaction: GsMJs8VGfm3tDpbELuj9yjZB3a1cvLjQtSxex5dRQS3D"
 echo ""
 
-# Check if secrets.json exists
-if [ ! -f "secrets.json" ]; then
-    echo "Error: secrets.json file not found in current directory"
-    echo "Please ensure secrets.json exists with the required configuration"
+# Check if config.json exists
+if [ ! -f "config.json" ]; then
+    echo "❌ Error: config.json file not found in current directory"
+    echo "   Please ensure config.json exists with the required configuration"
     exit 1
 fi
 
-# Read version control from secrets.json
-VERSION_CONTROL=$(jq -r '.VERSION_CONTROL // "no_update"' secrets.json)
+# Read version control from config.json
+VERSION_CONTROL=$(jq -r '.VERSION_CONTROL' config.json)
+OLD_ENCLAVE_ID=$(jq -r '.OLD_ENCLAVE_ID // ""' config.json)
 
 echo "Version Control Mode: $VERSION_CONTROL"
 
 # Function to get current PCRs from local build
 get_current_pcrs() {
+{{ ... }}
     if [ ! -f "out/nitro.pcrs" ]; then
         echo "Error: out/nitro.pcrs file not found. Please run 'make' to build the enclave first."
         exit 1

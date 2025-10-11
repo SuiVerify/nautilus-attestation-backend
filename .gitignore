@@ -9,7 +9,6 @@ target/
 .env
 .env.local
 .env.*.local
-secrets.json
 
 # IDE files
 .vscode/

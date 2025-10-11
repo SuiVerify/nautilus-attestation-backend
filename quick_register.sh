@@ -23,29 +23,27 @@ if ! curl -s --connect-timeout 5 "$ENCLAVE_URL/health" > /dev/null 2>&1; then
 fi
 echo "✅ Attestation backend is accessible"
 
-# Check if secrets.json exists
-if [ ! -f "secrets.json" ]; then
-    echo "⚠️  Creating default secrets.json..."
-    cat > secrets.json << EOF
-{
-  "VERSION_CONTROL": "no_update",
-  "OLD_ENCLAVE_ID": ""
-}
-EOF
-    echo "✅ Created secrets.json with default settings"
+# Check if config.json exists
+if [ ! -f "config.json" ]; then
+    echo "❌ Error: config.json file not found"
+    echo "   Please ensure config.json exists with VERSION_CONTROL setting"
+    exit 1
 fi
+
+# Read configuration from config.json
+VERSION_CONTROL=$(jq -r '.VERSION_CONTROL' config.json)
+OLD_ENCLAVE_ID=$(jq -r '.OLD_ENCLAVE_ID // ""' config.json)
+
+echo "📋 Configuration from config.json:"
+echo "   VERSION_CONTROL: $VERSION_CONTROL"
+echo "   OLD_ENCLAVE_ID: $OLD_ENCLAVE_ID"
 
 echo ""
 echo "🚀 Running registration with deployed contract..."
 echo ""
 
-# Run the registration
-./register_enclave.sh \
-  "$PACKAGE_ID" \
-  "$DID_REGISTRY" \
-  "$REGISTRY_CAP" \
-  "$ENCLAVE_URL" \
-  "$PACKAGE_ID"
+# Run the registration (no arguments needed - uses hardcoded values)
+./register_enclave.sh
 
 echo ""
 echo "=== Quick Registration Complete ==="

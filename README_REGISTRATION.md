@@ -4,6 +4,27 @@
 
 For immediate registration with the deployed SuiVerify contract:
 
+### **Step 1: Configure Registration Mode**
+
+Edit `config.json` to set your registration mode:
+
+```json
+{
+    "RUN_MODE": "both",
+    "VERSION_CONTROL": "update",     // "update" or "no_update"
+    "OLD_ENCLAVE_ID": "",           // Set if destroying old enclave
+    "RUST_LOG": "info",
+    "PYTHON_ENV": "production",
+    "ENCLAVE_MODE": "production"
+}
+```
+
+**Registration Modes:**
+- **`"update"`** - Updates PCRs first, then registers enclave (use for first registration or code changes)
+- **`"no_update"`** - Only registers enclave without PCR update (use for server restart with same code)
+
+### **Step 2: Run Registration**
+
 ```bash
 # 1. Start parent forwarder (before make)
 ./parent_forwarder.sh &
@@ -14,7 +35,7 @@ make
 # 3. Setup VSOCK forwarding
 ./setup_vsock.sh
 
-# 4. Register enclave (uses hardcoded object IDs)
+# 4. Register enclave (reads config.json automatically)
 ./quick_register.sh
 ```
 
@@ -31,49 +52,37 @@ make
 - **DID Registry**: `0x2c6962f40c84a7df1d40c74ab05c7f60c9afdbae8129cfe507ced948a02cbdc4`
 - **Registry Cap**: `0x9aa20287121e2d325405097c54b5a2519a5d3f745ca74d47358a490dc94914cc`
 
+## ⚙️ Configuration Guide
+
+### **config.json Settings**
+
+| Setting | Values | Description |
+|---------|--------|-------------|
+| `VERSION_CONTROL` | `"update"` | Updates PCRs first, then registers enclave. Use for first registration or when enclave code changes. |
+| | `"no_update"` | Only registers enclave without updating PCRs. Use when restarting with same code. |
+| `OLD_ENCLAVE_ID` | `""` | Empty for first registration |
+| | `"0x123..."` | Object ID of previous enclave to destroy (for updates) |
+
+### **When to Use Each Mode**
+
+**Use `"update"` mode when:**
+- First time registering the enclave
+- You've modified the enclave code (PCRs changed)
+- You want to replace an existing enclave
+
+**Use `"no_update"` mode when:**
+- Restarting the enclave server (same code, new public key)
+- PCRs haven't changed but you need a new enclave instance
+
 ## 📁 Files Overview
 
 | File | Purpose |
 |------|---------|
-| `ENCLAVE_REGISTRATION_FLOW.md` | Complete documentation of the registration process |
 | `register_enclave.sh` | Main registration script (updated with contract details) |
 | `quick_register.sh` | One-command registration for deployed contract |
 | `test_attestation.sh` | Test script for attestation backend endpoints |
-| `secrets.json` | Configuration file for registration modes |
+| `config.json` | Configuration file for registration modes and enclave settings |
 
-## 🔧 Registration Modes
-
-Configure in `secrets.json`:
-
-### 1. No Update Mode (Default)
-```json
-{
-  "VERSION_CONTROL": "no_update"
-}
-```
-- **Use case**: Server restart only, no codebase changes
-- **Actions**: Register new enclave with new public key
-- **PCRs**: Unchanged
-
-### 2. Update Mode
-```json
-{
-  "VERSION_CONTROL": "update",
-  "OLD_ENCLAVE_ID": "0x..."
-}
-```
-- **Use case**: Codebase changes affecting PCRs and public key
-- **Actions**: Update PCRs → Destroy old enclave → Register new enclave
-
-### 3. Destroy Only Mode
-```json
-{
-  "VERSION_CONTROL": "destroy_only",
-  "OLD_ENCLAVE_ID": "0x..."
-}
-```
-- **Use case**: Cleanup operations
-- **Actions**: Only destroy specified enclave
 
 ## 🧪 Testing
 

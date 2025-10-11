@@ -1,0 +1,8 @@
+{
+    "RUN_MODE": "both",
+    "VERSION_CONTROL": "update",
+    "OLD_ENCLAVE_ID": "",
+    "RUST_LOG": "info",
+    "PYTHON_ENV": "production",
+    "ENCLAVE_MODE": "production"
+  }
