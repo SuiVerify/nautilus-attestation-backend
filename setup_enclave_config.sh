@@ -3,7 +3,7 @@
 # Setup Enclave Configuration
 # This creates the necessary EnclaveConfig object before registration
 
-PACKAGE_ID="0xbf9a4a025fdd056d465993d4397bbfa9a69af9d3df29959672c836ee2edc968d"
+PACKAGE_ID="0x106e1ebf3dc76ef2fecd1d72275bfae0a265144b266495f61e2a4c3b00193764"
 
 echo "=== SuiVerify Enclave Config Setup ==="
 echo "📋 Package ID: $PACKAGE_ID"
@@ -32,36 +32,41 @@ echo "   PCR1: $PCR1"
 echo "   PCR2: $PCR2"
 echo ""
 
-echo "🚀 Creating Enclave Configuration..."
+echo "🔍 Looking for existing EnclaveConfig and Cap objects..."
 echo ""
 
-# Step 1: Create Cap using witness
-echo "📋 Step 1: Creating Cap with ENCLAVE witness..."
-CAP_RESULT=$(sui client ptb \
-    --assign witness "${PACKAGE_ID}::enclave::ENCLAVE" \
-    --move-call "${PACKAGE_ID}::enclave::new_cap<${PACKAGE_ID}::enclave::ENCLAVE>" witness \
-    --assign cap \
-    --gas-budget 100000000 \
-    --json)
+# The init() function creates these automatically when deployed
+# We need to find them by querying objects owned by the deployer
 
-if [ $? -ne 0 ]; then
-    echo "❌ Failed to create Cap"
-    exit 1
-fi
+echo "📋 Searching for Cap and EnclaveConfig objects..."
 
-# Extract Cap object ID from result
-CAP_OBJECT_ID=$(echo "$CAP_RESULT" | jq -r '.objectChanges[] | select(.type == "created" and (.objectType | contains("Cap"))) | .objectId')
+# Get all objects and filter for our types
+OBJECTS=$(sui client objects --json)
+
+# Find Cap object
+CAP_OBJECT_ID=$(echo "$OBJECTS" | jq -r --arg pkg "$PACKAGE_ID" '.[] | select(.type | contains($pkg + "::enclave::Cap")) | .objectId' | head -1)
+
+# Find EnclaveConfig object  
+CONFIG_OBJECT_ID=$(echo "$OBJECTS" | jq -r --arg pkg "$PACKAGE_ID" '.[] | select(.type | contains($pkg + "::enclave::EnclaveConfig")) | .objectId' | head -1)
 
 if [ -z "$CAP_OBJECT_ID" ]; then
-    echo "❌ Failed to extract Cap object ID"
+    echo "❌ Cap object not found. Was the contract deployed correctly?"
+    echo "   The init() function should create these automatically."
     exit 1
 fi
 
-echo "✅ Cap created: $CAP_OBJECT_ID"
+if [ -z "$CONFIG_OBJECT_ID" ]; then
+    echo "❌ EnclaveConfig object not found. Was the contract deployed correctly?"
+    echo "   The init() function should create these automatically."
+    exit 1
+fi
+
+echo "✅ Found Cap: $CAP_OBJECT_ID"
+echo "✅ Found EnclaveConfig: $CONFIG_OBJECT_ID"
 echo ""
 
-# Step 2: Create EnclaveConfig using the Cap
-echo "📋 Step 2: Creating EnclaveConfig..."
+# Now update the EnclaveConfig with real PCR values
+echo "📋 Updating EnclaveConfig with real PCR values..."
 
 # Convert PCR hex strings to byte arrays
 PCR0_ARRAY=$(python3 -c "
@@ -82,25 +87,18 @@ bytes_list = [str(int(hex_str[i:i+2], 16)) + 'u8' for i in range(0, len(hex_str)
 print('[' + ', '.join(bytes_list) + ']')
 ")
 
-CONFIG_RESULT=$(sui client ptb \
-    --move-call "${PACKAGE_ID}::enclave::create_enclave_config<${PACKAGE_ID}::enclave::ENCLAVE>" @${CAP_OBJECT_ID} "\"SuiVerify Enclave\"" "vector${PCR0_ARRAY}" "vector${PCR1_ARRAY}" "vector${PCR2_ARRAY}" \
+# Update PCRs in the existing config
+UPDATE_RESULT=$(sui client ptb \
+    --move-call "${PACKAGE_ID}::enclave::update_pcrs<${PACKAGE_ID}::enclave::ENCLAVE>" @${CONFIG_OBJECT_ID} @${CAP_OBJECT_ID} "vector${PCR0_ARRAY}" "vector${PCR1_ARRAY}" "vector${PCR2_ARRAY}" \
     --gas-budget 100000000 \
     --json)
 
 if [ $? -ne 0 ]; then
-    echo "❌ Failed to create EnclaveConfig"
+    echo "❌ Failed to update PCRs in EnclaveConfig"
     exit 1
 fi
 
-# Extract EnclaveConfig object ID
-CONFIG_OBJECT_ID=$(echo "$CONFIG_RESULT" | jq -r '.objectChanges[] | select(.type == "created" and (.objectType | contains("EnclaveConfig"))) | .objectId')
-
-if [ -z "$CONFIG_OBJECT_ID" ]; then
-    echo "❌ Failed to extract EnclaveConfig object ID"
-    exit 1
-fi
-
-echo "✅ EnclaveConfig created: $CONFIG_OBJECT_ID"
+echo "✅ EnclaveConfig updated with real PCR values"
 echo ""
 
 # Save the configuration for future use

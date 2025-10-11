@@ -4,7 +4,7 @@
 # Uses the deployed contract details from transaction GfVdQBof37WFQJzJ39JCUjitqPa6KsB6D13HGa6NoUn2
 
 # Deployed contract details
-PACKAGE_ID="0xbf9a4a025fdd056d465993d4397bbfa9a69af9d3df29959672c836ee2edc968d"
+PACKAGE_ID="0x106e1ebf3dc76ef2fecd1d72275bfae0a265144b266495f61e2a4c3b00193764"
 ENCLAVE_URL="http://localhost:4000"
 
 # Check if enclave configuration exists
