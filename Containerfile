@@ -64,8 +64,8 @@ ENV RUSTFLAGS="-C target-feature=+crt-static -C relocation-model=static"
 # Remove old Cargo.lock to allow fresh dependency resolution with Redis
 RUN rm -f Cargo.lock
 
-# Build attestation server with Redis (pure Rust) - no cmake/C dependencies
-RUN cargo build --release --target x86_64-unknown-linux-musl
+# Build attestation server with Redis and AWS NSM support
+RUN cargo build --release --target x86_64-unknown-linux-musl --features aws
 
 WORKDIR /build_cpio
 ENV KBUILD_BUILD_TIMESTAMP=1

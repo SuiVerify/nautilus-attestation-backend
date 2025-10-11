@@ -1,12 +1,28 @@
 #!/bin/bash
 
-# Enhanced Nautilus Enclave Registration Script
-# Updated to support new contract structure with cap requirements and package upgrade
+# SuiVerify Nautilus Enclave Registration Script
+# Updated for deployed contract: 0x6ec40d30e636afb906e621748ee60a9b72bc59a39325adda43deadd28dc89e09
+# Transaction: GfVdQBof37WFQJzJ39JCUjitqPa6KsB6D13HGa6NoUn2
 
 # Check if all required arguments are provided
 if [ "$#" -ne 5 ]; then
     echo "Usage: $0 <enclave_package_id> <enclave_config_id> <cap_object_id> <enclave_url> <original_package_id>"
-    echo "Example: $0    ip "
+    echo ""
+    echo "Example with deployed SuiVerify contract:"
+    echo "$0 \\"
+    echo "  0x6ec40d30e636afb906e621748ee60a9b72bc59a39325adda43deadd28dc89e09 \\"
+    echo "  0x2c6962f40c84a7df1d40c74ab05c7f60c9afdbae8129cfe507ced948a02cbdc4 \\"
+    echo "  0x9aa20287121e2d325405097c54b5a2519a5d3f745ca74d47358a490dc94914cc \\"
+    echo "  http://localhost:4000 \\"
+    echo "  0x6ec40d30e636afb906e621748ee60a9b72bc59a39325adda43deadd28dc89e09"
+    echo ""
+    echo "Object IDs from deployment:"
+    echo "  DID Registry: 0x2c6962f40c84a7df1d40c74ab05c7f60c9afdbae8129cfe507ced948a02cbdc4"
+    echo "  Registry Cap: 0x9aa20287121e2d325405097c54b5a2519a5d3f745ca74d47358a490dc94914cc"
+    echo "  Gov Whitelist: 0x5db149489d68ece83a08559773a1d1f898e4fa4b31d9807b7bb24c88dc8ffb26"
+    echo "  Gov Cap: 0xd4cbc702c861bd25c638d5025e7327ebc383ea253eafd30449cddc18f85eba63"
+    echo "  Payment Registry: 0x000af5ea941c01e426968d91a420018b9746c493e6fb2512dac4f20f93005748"
+    echo "  Payment Cap: 0x8471c94622d5a48bab2871469df3fa8d20b1061090c6e7bb48703e353bdd9ce7"
     exit 1
 fi
 
@@ -16,12 +32,16 @@ CAP_OBJECT_ID=$3
 ENCLAVE_URL=$4
 ORIGINAL_PACKAGE_ID=$5
 
-echo "=== Enhanced Nautilus Enclave Registration ==="
-echo "Current Package ID: $ENCLAVE_PACKAGE_ID"
+echo "=== SuiVerify Nautilus Enclave Registration ==="
+echo "Package ID: $ENCLAVE_PACKAGE_ID"
 echo "Original Package ID: $ORIGINAL_PACKAGE_ID"
 echo "Enclave Config ID: $ENCLAVE_CONFIG_OBJECT_ID"
 echo "Cap Object ID: $CAP_OBJECT_ID"
 echo "Enclave URL: $ENCLAVE_URL"
+echo ""
+echo "📋 Deployment Info:"
+echo "  Contract: 0x6ec40d30e636afb906e621748ee60a9b72bc59a39325adda43deadd28dc89e09"
+echo "  Transaction: GfVdQBof37WFQJzJ39JCUjitqPa6KsB6D13HGa6NoUn2"
 echo ""
 
 # Check if secrets.json exists
@@ -89,15 +109,32 @@ register_enclave() {
     echo "=== Registering Enclave ==="
     
     echo "Fetching attestation from enclave..."
-    # Fetch attestation and store the hex
-    ATTESTATION_HEX=$(curl -s $ENCLAVE_URL/get_attestation | jq -r '.attestation')
+    echo "📡 Calling: curl -s $ENCLAVE_URL/get_attestation"
     
-    echo "Got attestation, length=${#ATTESTATION_HEX}"
-    
-    if [ ${#ATTESTATION_HEX} -eq 0 ]; then
-        echo "Error: Attestation is empty. Please check status of $ENCLAVE_URL and its get_attestation endpoint."
+    # Test if the endpoint is reachable first
+    if ! curl -s --connect-timeout 5 "$ENCLAVE_URL/health" > /dev/null 2>&1; then
+        echo "❌ Error: Cannot reach attestation backend at $ENCLAVE_URL"
+        echo "   Please ensure the attestation backend is running:"
+        echo "   cd src/attestation-backend && cargo run"
         exit 1
     fi
+    
+    # Fetch attestation and store the hex
+    ATTESTATION_RESPONSE=$(curl -s $ENCLAVE_URL/get_attestation)
+    ATTESTATION_HEX=$(echo "$ATTESTATION_RESPONSE" | jq -r '.attestation // empty')
+    
+    echo "Got attestation response, length=${#ATTESTATION_HEX}"
+    
+    if [ -z "$ATTESTATION_HEX" ] || [ "$ATTESTATION_HEX" = "null" ]; then
+        echo "❌ Error: Attestation is empty or invalid."
+        echo "   Response: $ATTESTATION_RESPONSE"
+        echo "   Please check:"
+        echo "   1. Attestation backend is running: curl $ENCLAVE_URL/health"
+        echo "   2. Get attestation endpoint: curl $ENCLAVE_URL/get_attestation"
+        exit 1
+    fi
+    
+    echo "✅ Successfully fetched attestation (${#ATTESTATION_HEX} chars)"
     
     # Convert hex to array using Python
     echo "Converting attestation to byte array..."
