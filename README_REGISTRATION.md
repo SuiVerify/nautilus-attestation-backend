@@ -8,29 +8,28 @@ For immediate registration with the deployed SuiVerify contract:
 # 1. Start parent forwarder (before make)
 ./parent_forwarder.sh &
 
-# 2. Build and run enclave (now with AWS feature + ENCLAVE witness)
+# 2. Build and run enclave (with AWS feature)
 make
 
 # 3. Setup VSOCK forwarding
 ./setup_vsock.sh
 
-# 4. Create EnclaveConfig (one-time setup)
-./setup_enclave_config.sh
-
-# 5. Register enclave with the config
+# 4. Register enclave (uses hardcoded object IDs)
 ./quick_register.sh
 ```
 
 ## 📋 Deployed Contract Details
 
-**Package ID**: `0xbf9a4a025fdd056d465993d4397bbfa9a69af9d3df29959672c836ee2edc968d`  
-**Transaction**: `ViouAvr4NZzF9bnAqmMvS7LL8Ee6kesMTuE5mVHUWjP`
+**Package ID**: `0x106e1ebf3dc76ef2fecd1d72275bfae0a265144b266495f61e2a4c3b00193764`  
+**Transaction**: `GsMJs8VGfm3tDpbELuj9yjZB3a1cvLjQtSxex5dRQS3D`
 
-### Key Object IDs
+### Auto-Created Enclave Objects (via init())
+- **EnclaveConfig**: `0x3dea6c7ec46b60f07f2f3cdd82848836b38a0ffe5b0b7566227aa71c02934671`
+- **Cap**: `0xd3a9e73d75743164b75f8a73e5aa75a0dac5aed9c42b6a81a856dbec1e5abcff`
+
+### Other Contract Objects  
 - **DID Registry**: `0x2c6962f40c84a7df1d40c74ab05c7f60c9afdbae8129cfe507ced948a02cbdc4`
 - **Registry Cap**: `0x9aa20287121e2d325405097c54b5a2519a5d3f745ca74d47358a490dc94914cc`
-- **Gov Whitelist**: `0x5db149489d68ece83a08559773a1d1f898e4fa4b31d9807b7bb24c88dc8ffb26`
-- **Payment Registry**: `0x000af5ea941c01e426968d91a420018b9746c493e6fb2512dac4f20f93005748`
 
 ## 📁 Files Overview
 

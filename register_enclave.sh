@@ -1,48 +1,15 @@
 #!/bin/bash
 
-# Updated for deployed contract: 0x6ec40d30e636afb906e621748ee60a9b72bc59a39325adda43deadd28dc89e09
-# Transaction: GfVdQBof37WFQJzJ39JCUjitqPa6KsB6D13HGa6NoUn2
+# SuiVerify Enclave Registration Script
+# Updated for deployed contract: 0x106e1ebf3dc76ef2fecd1d72275bfae0a265144b266495f61e2a4c3b00193764
+# Transaction: GsMJs8VGfm3tDpbELuj9yjZB3a1cvLjQtSxex5dRQS3D
 
-# Configuration - Load from enclave_objects.json
-if [ ! -f "enclave_objects.json" ]; then
-    echo "❌ EnclaveConfig not found!"
-    echo "   Please run: ./setup_enclave_config.sh first"
-    exit 1
-fi
-
-ENCLAVE_PACKAGE_ID=$(jq -r '.package_id' enclave_objects.json)
-ORIGINAL_PACKAGE_ID=$(jq -r '.package_id' enclave_objects.json)
-ENCLAVE_CONFIG_OBJECT_ID=$(jq -r '.enclave_config_id' enclave_objects.json)
-CAP_OBJECT_ID=$(jq -r '.cap_object_id' enclave_objects.json)
+# Configuration - Hardcoded from deployment (auto-created by init())
+ENCLAVE_PACKAGE_ID="0x106e1ebf3dc76ef2fecd1d72275bfae0a265144b266495f61e2a4c3b00193764"
+ORIGINAL_PACKAGE_ID="0x106e1ebf3dc76ef2fecd1d72275bfae0a265144b266495f61e2a4c3b00193764"
+ENCLAVE_CONFIG_OBJECT_ID="0x3dea6c7ec46b60f07f2f3cdd82848836b38a0ffe5b0b7566227aa71c02934671"
+CAP_OBJECT_ID="0xd3a9e73d75743164b75f8a73e5aa75a0dac5aed9c42b6a81a856dbec1e5abcff"
 ENCLAVE_URL="http://localhost:4000"
-
-# Check if all required arguments are provided
-if [ "$#" -ne 5 ]; then
-    echo "Usage: $0 <enclave_package_id> <enclave_config_id> <cap_object_id> <enclave_url> <original_package_id>"
-    echo ""
-    echo "Example with deployed SuiVerify contract:"
-    echo "$0 \\"
-    echo "  0x6ec40d30e636afb906e621748ee60a9b72bc59a39325adda43deadd28dc89e09 \\"
-    echo "  0x2c6962f40c84a7df1d40c74ab05c7f60c9afdbae8129cfe507ced948a02cbdc4 \\"
-    echo "  0x9aa20287121e2d325405097c54b5a2519a5d3f745ca74d47358a490dc94914cc \\"
-    echo "  http://localhost:4000 \\"
-    echo "  0x6ec40d30e636afb906e621748ee60a9b72bc59a39325adda43deadd28dc89e09"
-    echo ""
-    echo "Object IDs from deployment:"
-    echo "  DID Registry: 0x2c6962f40c84a7df1d40c74ab05c7f60c9afdbae8129cfe507ced948a02cbdc4"
-    echo "  Registry Cap: 0x9aa20287121e2d325405097c54b5a2519a5d3f745ca74d47358a490dc94914cc"
-    echo "  Gov Whitelist: 0x5db149489d68ece83a08559773a1d1f898e4fa4b31d9807b7bb24c88dc8ffb26"
-    echo "  Gov Cap: 0xd4cbc702c861bd25c638d5025e7327ebc383ea253eafd30449cddc18f85eba63"
-    echo "  Payment Registry: 0x000af5ea941c01e426968d91a420018b9746c493e6fb2512dac4f20f93005748"
-    echo "  Payment Cap: 0x8471c94622d5a48bab2871469df3fa8d20b1061090c6e7bb48703e353bdd9ce7"
-    exit 1
-fi
-
-ENCLAVE_PACKAGE_ID=$1
-ENCLAVE_CONFIG_OBJECT_ID=$2
-CAP_OBJECT_ID=$3
-ENCLAVE_URL=$4
-ORIGINAL_PACKAGE_ID=$5
 
 echo "=== SuiVerify Nautilus Enclave Registration ==="
 echo "Package ID: $ENCLAVE_PACKAGE_ID"
@@ -52,8 +19,8 @@ echo "Cap Object ID: $CAP_OBJECT_ID"
 echo "Enclave URL: $ENCLAVE_URL"
 echo ""
 echo "📋 Deployment Info:"
-echo "  Contract: 0x6ec40d30e636afb906e621748ee60a9b72bc59a39325adda43deadd28dc89e09"
-echo "  Transaction: GfVdQBof37WFQJzJ39JCUjitqPa6KsB6D13HGa6NoUn2"
+echo "  Contract: 0x106e1ebf3dc76ef2fecd1d72275bfae0a265144b266495f61e2a4c3b00193764"
+echo "  Transaction: GsMJs8VGfm3tDpbELuj9yjZB3a1cvLjQtSxex5dRQS3D"
 echo ""
 
 # Check if secrets.json exists
