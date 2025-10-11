@@ -8,20 +8,23 @@ For immediate registration with the deployed SuiVerify contract:
 # 1. Start parent forwarder (before make)
 ./parent_forwarder.sh &
 
-# 2. Build and run enclave
+# 2. Build and run enclave (now with AWS feature + ENCLAVE witness)
 make
 
 # 3. Setup VSOCK forwarding
 ./setup_vsock.sh
 
-# 4. Quick registration with deployed contract
+# 4. Create EnclaveConfig (one-time setup)
+./setup_enclave_config.sh
+
+# 5. Register enclave with the config
 ./quick_register.sh
 ```
 
 ## 📋 Deployed Contract Details
 
-**Package ID**: `0x6ec40d30e636afb906e621748ee60a9b72bc59a39325adda43deadd28dc89e09`  
-**Transaction**: `GfVdQBof37WFQJzJ39JCUjitqPa6KsB6D13HGa6NoUn2`
+**Package ID**: `0xbf9a4a025fdd056d465993d4397bbfa9a69af9d3df29959672c836ee2edc968d`  
+**Transaction**: `ViouAvr4NZzF9bnAqmMvS7LL8Ee6kesMTuE5mVHUWjP`
 
 ### Key Object IDs
 - **DID Registry**: `0x2c6962f40c84a7df1d40c74ab05c7f60c9afdbae8129cfe507ced948a02cbdc4`

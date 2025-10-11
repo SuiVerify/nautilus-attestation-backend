@@ -4,14 +4,23 @@
 # Uses the deployed contract details from transaction GfVdQBof37WFQJzJ39JCUjitqPa6KsB6D13HGa6NoUn2
 
 # Deployed contract details
-PACKAGE_ID="0x6ec40d30e636afb906e621748ee60a9b72bc59a39325adda43deadd28dc89e09"
-DID_REGISTRY="0x2c6962f40c84a7df1d40c74ab05c7f60c9afdbae8129cfe507ced948a02cbdc4"
-REGISTRY_CAP="0x9aa20287121e2d325405097c54b5a2519a5d3f745ca74d47358a490dc94914cc"
+PACKAGE_ID="0xbf9a4a025fdd056d465993d4397bbfa9a69af9d3df29959672c836ee2edc968d"
 ENCLAVE_URL="http://localhost:4000"
+
+# Check if enclave configuration exists
+if [ ! -f "enclave_objects.json" ]; then
+    echo "❌ EnclaveConfig not found!"
+    echo "   Please run: ./setup_enclave_config.sh first"
+    exit 1
+fi
+
+# Load enclave configuration
+ENCLAVE_CONFIG_ID=$(jq -r '.enclave_config_id' enclave_objects.json)
+CAP_OBJECT_ID=$(jq -r '.cap_object_id' enclave_objects.json)
 
 echo "=== Quick SuiVerify Enclave Registration ==="
 echo "📋 Using deployed contract: $PACKAGE_ID"
-echo "🔗 Transaction: GfVdQBof37WFQJzJ39JCUjitqPa6KsB6D13HGa6NoUn2"
+echo "🔗 Transaction: ViouAvr4NZzF9bnAqmMvS7LL8Ee6kesMTuE5mVHUWjP"
 echo ""
 
 # Check if attestation backend is accessible

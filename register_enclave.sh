@@ -1,8 +1,20 @@
 #!/bin/bash
 
-# SuiVerify Nautilus Enclave Registration Script
 # Updated for deployed contract: 0x6ec40d30e636afb906e621748ee60a9b72bc59a39325adda43deadd28dc89e09
 # Transaction: GfVdQBof37WFQJzJ39JCUjitqPa6KsB6D13HGa6NoUn2
+
+# Configuration - Load from enclave_objects.json
+if [ ! -f "enclave_objects.json" ]; then
+    echo "❌ EnclaveConfig not found!"
+    echo "   Please run: ./setup_enclave_config.sh first"
+    exit 1
+fi
+
+ENCLAVE_PACKAGE_ID=$(jq -r '.package_id' enclave_objects.json)
+ORIGINAL_PACKAGE_ID=$(jq -r '.package_id' enclave_objects.json)
+ENCLAVE_CONFIG_OBJECT_ID=$(jq -r '.enclave_config_id' enclave_objects.json)
+CAP_OBJECT_ID=$(jq -r '.cap_object_id' enclave_objects.json)
+ENCLAVE_URL="http://localhost:4000"
 
 # Check if all required arguments are provided
 if [ "$#" -ne 5 ]; then
