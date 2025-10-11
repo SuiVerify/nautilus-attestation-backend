@@ -150,12 +150,13 @@ print(hex_to_vector("$ATTESTATION_HEX"))
 EOF
 )
     
-    echo "Calling register_enclave function with cap..."
-    # Execute sui client command with the converted array and cap
+    echo "Calling register_enclave function..."
+    # Execute sui client command with the converted array
+    # register_enclave function signature: register_enclave<T>(enclave_config, document, ctx)
     sui client ptb --assign v "vector$ATTESTATION_ARRAY" \
         --move-call "0x2::nitro_attestation::load_nitro_attestation" v @0x6 \
         --assign result \
-        --move-call "${ENCLAVE_PACKAGE_ID}::enclave::register_enclave<${ORIGINAL_PACKAGE_ID}::enclave::ENCLAVE>" @${ENCLAVE_CONFIG_OBJECT_ID} @${CAP_OBJECT_ID} result \
+        --move-call "${ENCLAVE_PACKAGE_ID}::enclave::register_enclave<${ORIGINAL_PACKAGE_ID}::enclave::ENCLAVE>" @${ENCLAVE_CONFIG_OBJECT_ID} result \
         --gas-budget 100000000
     
     if [ $? -eq 0 ]; then
