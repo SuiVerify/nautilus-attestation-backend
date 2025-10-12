@@ -1,7 +1,7 @@
 {
     "RUN_MODE": "both",
-    "VERSION_CONTROL": "update",
-    "OLD_ENCLAVE_ID": "",
+    "VERSION_CONTROL": "destroy_only",
+    "OLD_ENCLAVE_ID": "0xb5c1b9dff79454429785285bea9efbf69a0e0a90e330b3a7d4f56c2586dee727",
     "RUST_LOG": "info",
     "PYTHON_ENV": "production",
     "ENCLAVE_MODE": "production"
