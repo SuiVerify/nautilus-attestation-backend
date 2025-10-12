@@ -162,13 +162,13 @@ destroy_old_enclave() {
     echo "=== Destroying Old Enclave ==="
     echo "Old Enclave ID: $OLD_ENCLAVE_ID"
     
-    echo "Calling destroy_old_enclave function with cap..."
+    echo "Calling deploy_old_enclave_by_owner function (owner destruction)..."
     sui client call \
-        --function destroy_old_enclave \
+        --function deploy_old_enclave_by_owner \
         --module enclave \
         --package $ENCLAVE_PACKAGE_ID \
         --type-args "${ORIGINAL_PACKAGE_ID}::enclave::ENCLAVE" \
-        --args $OLD_ENCLAVE_ID $ENCLAVE_CONFIG_OBJECT_ID $CAP_OBJECT_ID \
+        --args $OLD_ENCLAVE_ID \
         --gas-budget 100000000
     
     if [ $? -eq 0 ]; then
