@@ -83,19 +83,23 @@ pub struct DocumentData {
 impl JwtManager {
     pub fn new() -> Result<Self> {
         // Check if running in enclave mode
-        let enclave_mode = std::env::var("ENCLAVE_MODE")
-            .unwrap_or_else(|_| "false".to_string())
-            .parse::<bool>()
-            .unwrap_or(false);
+        let enclave_mode_str = std::env::var("ENCLAVE_MODE")
+            .unwrap_or_else(|_| "false".to_string());
+        let enclave_mode = enclave_mode_str.parse::<bool>().unwrap_or(false);
+        info!("🔧 JwtManager ENCLAVE_MODE: '{}' -> {}", enclave_mode_str, enclave_mode);
             
         let auth_url = if enclave_mode {
             // In enclave: use localhost:8443 (forwarded via VSOCK)
-            std::env::var("GOVT_API_AUTH_URL")
-                .unwrap_or_else(|_| "https://localhost:8443/authenticate".to_string())
+            let url = std::env::var("GOVT_API_AUTH_URL")
+                .unwrap_or_else(|_| "https://localhost:8443/authenticate".to_string());
+            info!("🔧 ENCLAVE_MODE=true: Using auth URL: {}", url);
+            url
         } else {
             // Outside enclave: use direct API
-            std::env::var("GOVT_API_AUTH_URL")
-                .unwrap_or_else(|_| "https://api.sandbox.co.in/authenticate".to_string())
+            let url = std::env::var("GOVT_API_AUTH_URL")
+                .unwrap_or_else(|_| "https://api.sandbox.co.in/authenticate".to_string());
+            info!("🔧 ENCLAVE_MODE=false: Using auth URL: {}", url);
+            url
         };
         
         let api_key = std::env::var("GOVT_API_KEY")
@@ -180,19 +184,23 @@ pub struct GovernmentApiClient {
 impl GovernmentApiClient {
     pub fn new() -> Result<Self> {
         // Check if running in enclave mode
-        let enclave_mode = std::env::var("ENCLAVE_MODE")
-            .unwrap_or_else(|_| "false".to_string())
-            .parse::<bool>()
-            .unwrap_or(false);
+        let enclave_mode_str = std::env::var("ENCLAVE_MODE")
+            .unwrap_or_else(|_| "false".to_string());
+        let enclave_mode = enclave_mode_str.parse::<bool>().unwrap_or(false);
+        info!("🔧 GovernmentApiClient ENCLAVE_MODE: '{}' -> {}", enclave_mode_str, enclave_mode);
             
         let api_base_url = if enclave_mode {
             // In enclave: use localhost:8443 (forwarded via VSOCK)
-            std::env::var("GOVT_API_BASE_URL")
-                .unwrap_or_else(|_| "https://localhost:8443".to_string())
+            let url = std::env::var("GOVT_API_BASE_URL")
+                .unwrap_or_else(|_| "https://localhost:8443".to_string());
+            info!("🔧 ENCLAVE_MODE=true: Using base URL: {}", url);
+            url
         } else {
             // Outside enclave: use direct API
-            std::env::var("GOVT_API_BASE_URL")
-                .unwrap_or_else(|_| "https://api.sandbox.co.in".to_string())
+            let url = std::env::var("GOVT_API_BASE_URL")
+                .unwrap_or_else(|_| "https://api.sandbox.co.in".to_string());
+            info!("🔧 ENCLAVE_MODE=false: Using base URL: {}", url);
+            url
         };
 
         let client = Client::builder()
