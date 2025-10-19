@@ -106,9 +106,19 @@ impl JwtManager {
         let api_secret = std::env::var("GOVT_API_SECRET")
             .map_err(|_| anyhow!("GOVT_API_SECRET environment variable not set"))?;
 
-        let client = Client::builder()
-            .timeout(std::time::Duration::from_secs(30))
-            .build()?;
+        let client = if enclave_mode {
+            // In enclave: disable SSL verification for localhost proxy
+            Client::builder()
+                .timeout(std::time::Duration::from_secs(30))
+                .danger_accept_invalid_certs(true)
+                .danger_accept_invalid_hostnames(true)
+                .build()?
+        } else {
+            // Outside enclave: normal SSL verification
+            Client::builder()
+                .timeout(std::time::Duration::from_secs(30))
+                .build()?
+        };
 
         Ok(Self {
             client,
@@ -201,9 +211,19 @@ impl GovernmentApiClient {
             url
         };
 
-        let client = Client::builder()
-            .timeout(std::time::Duration::from_secs(60))
-            .build()?;
+        let client = if enclave_mode {
+            // In enclave: disable SSL verification for localhost proxy
+            Client::builder()
+                .timeout(std::time::Duration::from_secs(60))
+                .danger_accept_invalid_certs(true)
+                .danger_accept_invalid_hostnames(true)
+                .build()?
+        } else {
+            // Outside enclave: normal SSL verification
+            Client::builder()
+                .timeout(std::time::Duration::from_secs(60))
+                .build()?
+        };
 
         let jwt_manager = JwtManager::new()?;
 
