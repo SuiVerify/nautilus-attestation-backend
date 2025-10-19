@@ -161,6 +161,10 @@ if __name__ == '__main__':
     except Exception as e:
         logger.error(f"Error checking government API credentials: {e}")
 
+    # Start the Flask server
+    logger.info("Starting Sui Proxy Service on port 9999")
+    app.run(host='0.0.0.0', port=9999, debug=False)
+
 # Government API Proxy Endpoints
 # JWT token cache
 jwt_token_cache = {
@@ -257,8 +261,3 @@ def govt_api_pan_verify():
     except Exception as e:
         logger.error(f"Error in government API proxy: {e}")
         return jsonify({"error": str(e)}), 500
-
-    
-    # Start the Flask server
-    logger.info("Starting Sui Proxy Service on port 9999")
-    app.run(host='0.0.0.0', port=9999, debug=False)
