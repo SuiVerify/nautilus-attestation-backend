@@ -111,7 +111,6 @@ impl JwtManager {
             Client::builder()
                 .timeout(std::time::Duration::from_secs(30))
                 .danger_accept_invalid_certs(true)
-                .danger_accept_invalid_hostnames(true)
                 .build()?
         } else {
             // Outside enclave: normal SSL verification
@@ -216,7 +215,6 @@ impl GovernmentApiClient {
             Client::builder()
                 .timeout(std::time::Duration::from_secs(60))
                 .danger_accept_invalid_certs(true)
-                .danger_accept_invalid_hostnames(true)
                 .build()?
         } else {
             // Outside enclave: normal SSL verification
