@@ -131,40 +131,6 @@ def execute_ptb():
         logger.error(f"Error executing PTB: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500
 
-if __name__ == '__main__':
-    # Load environment variables from .env file
-    env_file = os.path.join(os.path.dirname(__file__), 'src', 'attestation-backend', '.env')
-    if os.path.exists(env_file):
-        load_dotenv(env_file)
-        logger.info(f"Loaded environment variables from: {env_file}")
-    else:
-        logger.warning(f"No .env file found at: {env_file}")
-    
-    # Check if sui CLI is available
-    try:
-        result = subprocess.run(['sui', '--version'], capture_output=True, text=True)
-        if result.returncode == 0:
-            logger.info(f"Sui CLI available: {result.stdout.strip()}")
-        else:
-            logger.error("Sui CLI not available or not working")
-    except Exception as e:
-        logger.error(f"Error checking Sui CLI: {e}")
-    
-    # Verify government API credentials are available
-    try:
-        api_key = os.getenv('GOVT_API_KEY')
-        api_secret = os.getenv('GOVT_API_SECRET')
-        if api_key and api_secret:
-            logger.info(f"Government API credentials loaded: Key={api_key[:10]}..., Secret={api_secret[:10]}...")
-        else:
-            logger.warning("Government API credentials not found in environment")
-    except Exception as e:
-        logger.error(f"Error checking government API credentials: {e}")
-
-    # Start the Flask server
-    logger.info("Starting Sui Proxy Service on port 9999")
-    app.run(host='0.0.0.0', port=9999, debug=False)
-
 # Government API Proxy Endpoints
 # JWT token cache
 jwt_token_cache = {
@@ -261,3 +227,37 @@ def govt_api_pan_verify():
     except Exception as e:
         logger.error(f"Error in government API proxy: {e}")
         return jsonify({"error": str(e)}), 500
+
+if __name__ == '__main__':
+    # Load environment variables from .env file
+    env_file = os.path.join(os.path.dirname(__file__), 'src', 'attestation-backend', '.env')
+    if os.path.exists(env_file):
+        load_dotenv(env_file)
+        logger.info(f"Loaded environment variables from: {env_file}")
+    else:
+        logger.warning(f"No .env file found at: {env_file}")
+    
+    # Check if sui CLI is available
+    try:
+        result = subprocess.run(['sui', '--version'], capture_output=True, text=True)
+        if result.returncode == 0:
+            logger.info(f"Sui CLI available: {result.stdout.strip()}")
+        else:
+            logger.error("Sui CLI not available or not working")
+    except Exception as e:
+        logger.error(f"Error checking Sui CLI: {e}")
+    
+    # Verify government API credentials are available
+    try:
+        api_key = os.getenv('GOVT_API_KEY')
+        api_secret = os.getenv('GOVT_API_SECRET')
+        if api_key and api_secret:
+            logger.info(f"Government API credentials loaded: Key={api_key[:10]}..., Secret={api_secret[:10]}...")
+        else:
+            logger.warning("Government API credentials not found in environment")
+    except Exception as e:
+        logger.error(f"Error checking government API credentials: {e}")
+
+    # Start the Flask server
+    logger.info("Starting Sui Proxy Service on port 9999")
+    app.run(host='0.0.0.0', port=9999, debug=False)
