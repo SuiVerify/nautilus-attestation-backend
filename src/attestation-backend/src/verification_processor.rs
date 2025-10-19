@@ -315,40 +315,226 @@ impl VerificationProcessor {
     }
 
     async fn execute_sui_contract(&self, message: &SuiVerificationMessage) -> Result<()> {
-        info!("Executing Sui contract for wallet: {}", message.user_wallet);
+        info!("Executing Sui contract for wallet: {} using HTTP calls to Flask proxy", message.user_wallet);
 
-        // Prepare Sui CLI command
-        let mut cmd = tokio::process::Command::new("sui");
-        cmd.args([
-            "client",
-            "call",
-            "--package", &self.package_id,
-            "--module", "verification_registry",
-            "--function", "register_verification",
-            "--args", &self.registry_id,
-            "--args", &self.cap_id,
-            "--args", &message.user_wallet,
-            "--args", &message.did_id.to_string(),
-            "--args", &message.result,
-            "--args", &message.evidence_hash,
-            "--args", &self.clock_id,
-            "--gas-budget", "10000000",
-            "--json"
-        ]);
+        // Step 1: Execute start_verification via HTTP call to Flask proxy
+        let user_did_id = self.call_start_verification(
+            &message.user_wallet,
+            message.did_id,
+        ).await?;
 
-        // Execute command
-        let output = cmd.output().await
-            .map_err(|e| anyhow!("Failed to execute Sui command: {}", e))?;
-
-        if !output.status.success() {
-            let stderr = String::from_utf8_lossy(&output.stderr);
-            return Err(anyhow!("Sui command failed: {}", stderr));
+        if let Some(did_id) = user_did_id {
+            info!("✅ Step 1: start_verification successful for wallet: {} with DID ID: {}", 
+                  message.user_wallet, did_id);
+            
+            // Step 2: Execute update_verification_status with evidence hash (only if verified)
+            if message.result == "verified" {
+                info!("✅ Step 2: Executing update_verification_status with evidence hash");
+                
+                // Generate signature for the verification
+                let signature = self.generate_verification_signature(message)?;
+                let current_timestamp_ms = chrono::Utc::now().timestamp_millis() as u64;
+                
+                self.call_update_verification_status(
+                    &message.user_wallet,
+                    &did_id,
+                    true, // is_verified = true
+                    signature,
+                    current_timestamp_ms,
+                    &message.evidence_hash,
+                ).await?;
+                
+                info!("🎉 Complete Sui contract execution successful for wallet: {}", message.user_wallet);
+                info!("Evidence hash recorded on-chain: {}", message.evidence_hash);
+            } else {
+                info!("⚠️ Verification result is '{}', skipping update_verification_status", message.result);
+            }
+        } else {
+            warn!("❌ start_verification returned None for wallet: {}", message.user_wallet);
         }
-        let stdout = String::from_utf8_lossy(&output.stdout);
-        info!("Sui contract execution successful for wallet: {}", message.user_wallet);
-        info!("Transaction output: {}", stdout);
 
         Ok(())
+    }
+
+    async fn call_start_verification(
+        &self,
+        user_address: &str,
+        redis_did_id: u8,
+    ) -> Result<Option<String>> {
+        info!("Calling start_verification via HTTP for user: {}", user_address);
+        
+        // Map Redis DID ID to contract DID type
+        let contract_did_type = match redis_did_id {
+            0 => 1, // DID_AGE_VERIFY
+            1 => 2, // DID_CITIZENSHIP_VERIFY
+            _ => {
+                warn!("Unknown DID ID: {}, defaulting to age verification", redis_did_id);
+                1
+            }
+        };
+
+        let call_data = serde_json::json!({
+            "package_id": self.package_id,
+            "module": "did_registry",
+            "function": "start_verification",
+            "args": [
+                self.registry_id,
+                self.cap_id,
+                user_address,
+                contract_did_type,
+                "0x0000000000000000000000000000000000000000000000000000000000000006"  // Clock object ID
+            ],
+            "gas_budget": "10000000"
+        });
+
+        let client = reqwest::Client::new();
+        let response = client
+            .post("http://localhost:9999/sui/client/call")
+            .json(&call_data)
+            .send()
+            .await?;
+
+        let result: serde_json::Value = response.json().await?;
+
+        if result["success"].as_bool().unwrap_or(false) {
+            info!("start_verification executed successfully for user: {}", user_address);
+            let output_str = result["stdout"].as_str().unwrap_or("");
+            info!("Output: {}", output_str);
+            
+            // Extract UserDID object ID from the transaction output using the same logic as redis_sui_processor
+            if let Some(user_did_id) = self.extract_user_did_id(output_str) {
+                info!("Extracted UserDID ID: {}", user_did_id);
+                return Ok(Some(user_did_id));
+            } else {
+                warn!("Could not extract UserDID ID from transaction output");
+            }
+            
+            let stderr = result["stderr"].as_str().unwrap_or("");
+            if !stderr.is_empty() {
+                warn!("Warnings: {}", stderr);
+            }
+        } else {
+            let stderr = result["stderr"].as_str().unwrap_or("unknown error");
+            let stdout = result["stdout"].as_str().unwrap_or("");
+            let returncode = result["returncode"].as_i64().unwrap_or(-1);
+            
+            error!("start_verification failed for user: {}", user_address);
+            error!("Exit code: {}", returncode);
+            error!("STDERR: {}", stderr);
+            error!("STDOUT: {}", stdout);
+        }
+
+        Ok(None)
+    }
+
+    async fn call_update_verification_status(
+        &self,
+        user_address: &str,
+        user_did_id: &str,
+        verified: bool,
+        nautilus_signature: Vec<u8>,
+        signature_timestamp_ms: u64,
+        evidence_hash: &str,
+    ) -> Result<()> {
+        info!("Calling update_verification_status via HTTP for user: {}", user_address);
+
+        let call_data = serde_json::json!({
+            "package_id": self.package_id,
+            "module": "did_registry",
+            "function": "update_verification_status",
+            "args": [
+                self.registry_id,
+                self.cap_id,
+                user_did_id,
+                verified.to_string().to_lowercase(),
+                nautilus_signature,
+                signature_timestamp_ms.to_string(),
+                evidence_hash,
+                "0x0000000000000000000000000000000000000000000000000000000000000006"  // Clock object ID
+            ],
+            "gas_budget": "10000000"
+        });
+
+        let client = reqwest::Client::new();
+        let response = client
+            .post("http://localhost:9999/sui/client/call")
+            .json(&call_data)
+            .send()
+            .await?;
+
+        let result: serde_json::Value = response.json().await?;
+
+        if result["success"].as_bool().unwrap_or(false) {
+            info!("update_verification_status executed successfully for user: {}", user_address);
+            let output_str = result["stdout"].as_str().unwrap_or("");
+            info!("Output: {}", output_str);
+        } else {
+            let stderr = result["stderr"].as_str().unwrap_or("unknown error");
+            return Err(anyhow!("update_verification_status failed: {}", stderr));
+        }
+
+        Ok(())
+    }
+
+    /// Extract UserDID object ID from Sui transaction output (replicated from redis_sui_processor.rs)
+    fn extract_user_did_id(&self, output: &str) -> Option<String> {
+        let lines: Vec<&str> = output.lines().collect();
+        let mut i = 0;
+        
+        // Look for Created Objects section and find the UserDID object
+        while i < lines.len() {
+            let line = lines[i];
+            
+            // Look for ObjectID line
+            if line.contains("ObjectID:") && line.contains("0x") {
+                // Extract the object ID
+                if let Some(start) = line.find("0x") {
+                    let id_part = &line[start..];
+                    let object_id = if let Some(end) = id_part.find(char::is_whitespace) {
+                        &id_part[..end]
+                    } else {
+                        id_part.trim()
+                    };
+                    
+                    // Look ahead for ObjectType line to check if this is a UserDID
+                    for j in (i+1)..(i+5).min(lines.len()) {
+                        let next_line = lines[j];
+                        if next_line.contains("ObjectType:") && next_line.contains("::did_registry::UserDID") {
+                            info!("Found UserDID object: {}", object_id);
+                            return Some(object_id.to_string());
+                        }
+                        // Stop looking if we hit another ObjectID (next object)
+                        if next_line.contains("ObjectID:") {
+                            break;
+                        }
+                    }
+                }
+            }
+            i += 1;
+        }
+        
+        warn!("Could not find UserDID object in transaction output");
+        None
+    }
+
+    fn generate_verification_signature(&self, message: &SuiVerificationMessage) -> Result<Vec<u8>> {
+        // Create a payload to sign (matching the format expected by the contract)
+        let payload = format!(
+            "{}:{}:{}:{}:{}",
+            message.user_wallet,
+            message.did_id,
+            message.result,
+            message.evidence_hash,
+            chrono::Utc::now().to_rfc3339()
+        );
+        
+        // Sign the payload with the enclave keypair
+        use fastcrypto::traits::Signer;
+        let signature = self.keypair.sign(payload.as_bytes());
+        
+        info!("Generated verification signature for wallet: {}", message.user_wallet);
+        
+        Ok(signature.as_ref().to_vec())
     }
 }
 
