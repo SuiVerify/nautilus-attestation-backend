@@ -89,13 +89,12 @@ impl JwtManager {
         info!("🔧 JwtManager ENCLAVE_MODE: '{}' -> {}", enclave_mode_str, enclave_mode);
             
         let auth_url = if enclave_mode {
-            // In enclave: use localhost:8443 (forwarded via VSOCK)
-            let url = std::env::var("GOVT_API_AUTH_URL")
-                .unwrap_or_else(|_| "https://localhost:8443/authenticate".to_string());
-            info!("🔧 ENCLAVE_MODE=true: Using auth URL: {}", url);
+            // In enclave: force localhost:8443 (forwarded via VSOCK)
+            let url = "https://localhost:8443/authenticate".to_string();
+            info!("🔧 ENCLAVE_MODE=true: Forcing auth URL: {}", url);
             url
         } else {
-            // Outside enclave: use direct API
+            // Outside enclave: use env var or direct API
             let url = std::env::var("GOVT_API_AUTH_URL")
                 .unwrap_or_else(|_| "https://api.sandbox.co.in/authenticate".to_string());
             info!("🔧 ENCLAVE_MODE=false: Using auth URL: {}", url);
@@ -190,13 +189,12 @@ impl GovernmentApiClient {
         info!("🔧 GovernmentApiClient ENCLAVE_MODE: '{}' -> {}", enclave_mode_str, enclave_mode);
             
         let api_base_url = if enclave_mode {
-            // In enclave: use localhost:8443 (forwarded via VSOCK)
-            let url = std::env::var("GOVT_API_BASE_URL")
-                .unwrap_or_else(|_| "https://localhost:8443".to_string());
-            info!("🔧 ENCLAVE_MODE=true: Using base URL: {}", url);
+            // In enclave: force localhost:8443 (forwarded via VSOCK)
+            let url = "https://localhost:8443".to_string();
+            info!("🔧 ENCLAVE_MODE=true: Forcing base URL: {}", url);
             url
         } else {
-            // Outside enclave: use direct API
+            // Outside enclave: use env var or direct API
             let url = std::env::var("GOVT_API_BASE_URL")
                 .unwrap_or_else(|_| "https://api.sandbox.co.in".to_string());
             info!("🔧 ENCLAVE_MODE=false: Using base URL: {}", url);
