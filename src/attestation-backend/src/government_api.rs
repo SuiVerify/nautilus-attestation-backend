@@ -255,18 +255,35 @@ impl GovernmentApiClient {
             "reason": document_data.reason
         });
 
-        let url = format!("{}/kyc/pan/verify", self.api_base_url);
+        let url = if std::env::var("ENCLAVE_MODE").unwrap_or_else(|_| "false".to_string()).parse::<bool>().unwrap_or(false) {
+            // In enclave: use host proxy via VSOCK
+            "http://localhost:9999/govt-api/pan/verify".to_string()
+        } else {
+            // Outside enclave: direct API call
+            format!("{}/kyc/pan/verify", self.api_base_url)
+        };
 
         info!("Making PAN verification API call to: {}", url);
 
-        let response = self.client
-            .post(&url)
-            .header("authorization", token)  // Use raw JWT token without "Bearer" prefix
-            .header("Content-Type", "application/json")
-            .header("x-api-key", &self.jwt_manager.api_key)  // Add missing API key header
-            .json(&verification_payload)
-            .send()
-            .await?;
+        let response = if std::env::var("ENCLAVE_MODE").unwrap_or_else(|_| "false".to_string()).parse::<bool>().unwrap_or(false) {
+            // In enclave: call host proxy (no auth headers needed)
+            self.client
+                .post(&url)
+                .header("Content-Type", "application/json")
+                .json(&verification_payload)
+                .send()
+                .await?
+        } else {
+            // Outside enclave: direct API call with auth headers
+            self.client
+                .post(&url)
+                .header("authorization", token)  // Use raw JWT token without "Bearer" prefix
+                .header("Content-Type", "application/json")
+                .header("x-api-key", &self.jwt_manager.api_key)  // Add missing API key header
+                .json(&verification_payload)
+                .send()
+                .await?
+        };
 
         let status = response.status();
         let response_text = response.text().await?;
