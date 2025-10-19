@@ -242,8 +242,14 @@ impl GovernmentApiClient {
     pub async fn verify_pan(&mut self, document_data: &DocumentData) -> Result<GovernmentApiResponse> {
         info!("Starting PAN verification for PAN: {}", document_data.pan);
 
-        // Get valid JWT token
-        let token = self.jwt_manager.get_valid_token().await?;
+        // Get valid JWT token (only needed for direct API calls, not proxy)
+        let token = if std::env::var("ENCLAVE_MODE").unwrap_or_else(|_| "false".to_string()).parse::<bool>().unwrap_or(false) {
+            // In enclave: using proxy, no token needed
+            "".to_string()
+        } else {
+            // Outside enclave: direct API call, need token
+            self.jwt_manager.get_valid_token().await?
+        };
 
         // Prepare PAN verification payload (match exact API format)
         let verification_payload = serde_json::json!({
