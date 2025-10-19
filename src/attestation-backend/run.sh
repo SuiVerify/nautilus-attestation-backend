@@ -74,20 +74,21 @@ echo "Redis URL overridden to use local forwarding: $REDIS_URL"
 
 # == ATTENTION: code should be generated here that added all hosts to forward traffic ===
 # Traffic-forwarder-block
-# External API forwarders configured for auction validation services
+# External API forwarders configured for Redis services only
 
-# Redis service is external (Redis Cloud) - no local forwarding needed
-echo "Redis service configured to use external Redis Cloud"
-echo "No local Redis forwarding required"
+# Redis service forwarding (Redis Cloud)
+echo "Setting up Redis Cloud forwarding..."
+socat TCP-LISTEN:6379,reuseaddr,fork VSOCK-CONNECT:3:6379 &
+
+echo "External service forwarding configured:"
+echo "  - Redis Cloud -> localhost:6379 -> VSOCK CID 3:6379"
+echo "  - Government API calls will be made directly from enclave to internet"
 
 # Listens on Local VSOCK Port 4000 (Rust service) and forwards to localhost 4000
 socat VSOCK-LISTEN:4000,reuseaddr,fork TCP:localhost:4000 &
 
 # Forward HTTP requests to CID 3 (parent) for Sui proxy communication
 socat TCP-LISTEN:9999,reuseaddr,fork VSOCK-CONNECT:3:9999 &
-
-# Forward Redis requests to CID 3 (parent) for Redis Cloud access
-socat TCP-LISTEN:6379,reuseaddr,fork VSOCK-CONNECT:3:6379 &
 
 echo "Starting Rust attestation-server on port 4000..."
 /attestation_server &

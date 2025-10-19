@@ -10,8 +10,9 @@ use std::sync::Arc;
 // CORS imports moved to function scope
 use tracing::{info, error};
 
-mod redis_sui_processor;
-use redis_sui_processor::start_redis_sui_processor;
+mod verification_processor;
+mod government_api;
+use verification_processor::start_verification_processor;
 // use rand::SeedableRng;
 
 #[tokio::main]
@@ -77,11 +78,11 @@ async fn main() -> Result<()> {
     let redis_keypair = Ed25519KeyPair::from_bytes(eph_kp.as_bytes())?;
     let state = Arc::new(AppState { eph_kp });
 
-    info!("Starting attestation server with API and Redis processor");
+    info!("Starting attestation server with API and Verification processor");
 
-    // Start both API server and Redis processor concurrently
+    // Start both API server and Verification processor concurrently
     let api_handle = tokio::spawn(run_api_server(state));
-    let redis_handle = tokio::spawn(start_redis_sui_processor(redis_keypair));
+    let verification_handle = tokio::spawn(start_verification_processor(redis_keypair));
 
     // Wait for either to complete (or fail)
     tokio::select! {
@@ -92,11 +93,11 @@ async fn main() -> Result<()> {
                 Err(e) => error!("API server task panicked: {}", e),
             }
         }
-        result = redis_handle => {
+        result = verification_handle => {
             match result {
-                Ok(Ok(())) => info!("Redis processor completed successfully"),
-                Ok(Err(e)) => error!("Redis processor failed: {}", e),
-                Err(e) => error!("Redis processor task panicked: {}", e),
+                Ok(Ok(())) => info!("Verification processor completed successfully"),
+                Ok(Err(e)) => error!("Verification processor failed: {}", e),
+                Err(e) => error!("Verification processor task panicked: {}", e),
             }
         }
     }

@@ -7,7 +7,11 @@ use serde_json::json;
 
 pub mod app;
 pub mod common;
-// pub mod zklogin; // COMMENTED OUT - No longer using zkLogin functionality in this version
+pub mod government_api;
+// pub mod kafka_sui_processor; // Commented out - not using Kafka
+pub mod redis_sui_processor;
+pub mod verification_processor;
+pub mod zklogin;
 
 /// App state, at minimum needs to maintain the ephemeral keypair.  
 pub struct AppState {
