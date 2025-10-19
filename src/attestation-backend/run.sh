@@ -86,11 +86,11 @@ socat TCP-LISTEN:6379,reuseaddr,fork VSOCK-CONNECT:3:6379 &
 
 # Government API forwarding (sandbox.co.in)
 echo "Setting up Government API forwarding..."
-socat TCP-LISTEN:443,reuseaddr,fork VSOCK-CONNECT:3:443 &
+socat TCP-LISTEN:8443,reuseaddr,fork VSOCK-CONNECT:3:8443 &
 
 echo "External service forwarding configured:"
 echo "  - Redis Cloud -> localhost:6379 -> VSOCK CID 3:6379"
-echo "  - Government API -> localhost:443 -> VSOCK CID 3:443"
+echo "  - Government API -> localhost:8443 -> VSOCK CID 3:8443"
 
 # Listens on Local VSOCK Port 4000 (Rust service) and forwards to localhost 4000
 socat VSOCK-LISTEN:4000,reuseaddr,fork TCP:localhost:4000 &

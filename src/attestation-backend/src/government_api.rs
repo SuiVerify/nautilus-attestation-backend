@@ -89,9 +89,9 @@ impl JwtManager {
             .unwrap_or(false);
             
         let auth_url = if enclave_mode {
-            // In enclave: use localhost (forwarded via VSOCK)
+            // In enclave: use localhost:8443 (forwarded via VSOCK)
             std::env::var("GOVT_API_AUTH_URL")
-                .unwrap_or_else(|_| "https://localhost/authenticate".to_string())
+                .unwrap_or_else(|_| "https://localhost:8443/authenticate".to_string())
         } else {
             // Outside enclave: use direct API
             std::env::var("GOVT_API_AUTH_URL")
@@ -186,9 +186,9 @@ impl GovernmentApiClient {
             .unwrap_or(false);
             
         let api_base_url = if enclave_mode {
-            // In enclave: use localhost (forwarded via VSOCK)
+            // In enclave: use localhost:8443 (forwarded via VSOCK)
             std::env::var("GOVT_API_BASE_URL")
-                .unwrap_or_else(|_| "https://localhost".to_string())
+                .unwrap_or_else(|_| "https://localhost:8443".to_string())
         } else {
             // Outside enclave: use direct API
             std::env::var("GOVT_API_BASE_URL")

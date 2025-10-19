@@ -2,7 +2,7 @@
 # Kill any existing forwarders
 pkill -f "VSOCK-LISTEN:9999"
 pkill -f "VSOCK-LISTEN:6379"
-pkill -f "VSOCK-LISTEN:443"
+pkill -f "VSOCK-LISTEN:8443"
 
 echo "Starting parent forwarder script..."
 
@@ -24,9 +24,9 @@ echo "Setting up VSOCK forwarding for Redis Cloud..."
 REDIS_VSOCK_PID=$!
 echo "Redis VSOCK forwarder started with PID: $REDIS_VSOCK_PID"
 
-# Forward VSOCK port 443 to Government API (sandbox.co.in)
+# Forward VSOCK port 8443 to Government API (sandbox.co.in)
 echo "Setting up VSOCK forwarding for Government API..."
-/usr/local/bin/socat VSOCK-LISTEN:443,fork,reuseaddr TCP:api.sandbox.co.in:443 &
+/usr/local/bin/socat VSOCK-LISTEN:8443,fork,reuseaddr TCP:api.sandbox.co.in:443 &
 GOVT_API_VSOCK_PID=$!
 echo "Government API VSOCK forwarder started with PID: $GOVT_API_VSOCK_PID"
 
