@@ -2,6 +2,7 @@
 # Kill any existing forwarders
 pkill -f "VSOCK-LISTEN:9999"
 pkill -f "VSOCK-LISTEN:6379"
+pkill -f "VSOCK-LISTEN:443"
 
 echo "Starting parent forwarder script..."
 
@@ -23,8 +24,14 @@ echo "Setting up VSOCK forwarding for Redis Cloud..."
 REDIS_VSOCK_PID=$!
 echo "Redis VSOCK forwarder started with PID: $REDIS_VSOCK_PID"
 
+# Forward VSOCK port 443 to Government API (sandbox.co.in)
+echo "Setting up VSOCK forwarding for Government API..."
+/usr/local/bin/socat VSOCK-LISTEN:443,fork,reuseaddr TCP:api.sandbox.co.in:443 &
+GOVT_API_VSOCK_PID=$!
+echo "Government API VSOCK forwarder started with PID: $GOVT_API_VSOCK_PID"
+
 echo "Parent forwarders setup complete"
-echo "PIDs: Sui Proxy=$SUI_PROXY_PID, Sui VSOCK=$SUI_VSOCK_PID, Redis VSOCK=$REDIS_VSOCK_PID"
+echo "PIDs: Sui Proxy=$SUI_PROXY_PID, Sui VSOCK=$SUI_VSOCK_PID, Redis VSOCK=$REDIS_VSOCK_PID, Govt API VSOCK=$GOVT_API_VSOCK_PID"
 
 # Keep script running
 wait

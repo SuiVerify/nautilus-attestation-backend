@@ -82,9 +82,21 @@ pub struct DocumentData {
 
 impl JwtManager {
     pub fn new() -> Result<Self> {
-        // Always use direct API calls (enclave can make direct internet calls)
-        let auth_url = std::env::var("GOVT_API_AUTH_URL")
-            .unwrap_or_else(|_| "https://api.sandbox.co.in/authenticate".to_string());
+        // Check if running in enclave mode
+        let enclave_mode = std::env::var("ENCLAVE_MODE")
+            .unwrap_or_else(|_| "false".to_string())
+            .parse::<bool>()
+            .unwrap_or(false);
+            
+        let auth_url = if enclave_mode {
+            // In enclave: use localhost (forwarded via VSOCK)
+            std::env::var("GOVT_API_AUTH_URL")
+                .unwrap_or_else(|_| "https://localhost/authenticate".to_string())
+        } else {
+            // Outside enclave: use direct API
+            std::env::var("GOVT_API_AUTH_URL")
+                .unwrap_or_else(|_| "https://api.sandbox.co.in/authenticate".to_string())
+        };
         
         let api_key = std::env::var("GOVT_API_KEY")
             .map_err(|_| anyhow!("GOVT_API_KEY environment variable not set"))?;
@@ -167,9 +179,21 @@ pub struct GovernmentApiClient {
 
 impl GovernmentApiClient {
     pub fn new() -> Result<Self> {
-        // Always use direct API calls (enclave can make direct internet calls)
-        let api_base_url = std::env::var("GOVT_API_BASE_URL")
-            .unwrap_or_else(|_| "https://api.sandbox.co.in".to_string());
+        // Check if running in enclave mode
+        let enclave_mode = std::env::var("ENCLAVE_MODE")
+            .unwrap_or_else(|_| "false".to_string())
+            .parse::<bool>()
+            .unwrap_or(false);
+            
+        let api_base_url = if enclave_mode {
+            // In enclave: use localhost (forwarded via VSOCK)
+            std::env::var("GOVT_API_BASE_URL")
+                .unwrap_or_else(|_| "https://localhost".to_string())
+        } else {
+            // Outside enclave: use direct API
+            std::env::var("GOVT_API_BASE_URL")
+                .unwrap_or_else(|_| "https://api.sandbox.co.in".to_string())
+        };
 
         let client = Client::builder()
             .timeout(std::time::Duration::from_secs(60))

@@ -64,6 +64,10 @@ fi
 
 echo "Environment variables configured from .env files"
 
+# Set enclave mode to use localhost for external APIs
+export ENCLAVE_MODE=true
+echo "Enclave mode enabled: $ENCLAVE_MODE"
+
 # Override Redis URL to use local forwarding instead of direct Redis Cloud access
 export REDIS_URL="redis://default:8GYkgUdA0XwfqNbdMg5hl6oc1f9wUpH0@localhost:6379"
 echo "Redis URL overridden to use local forwarding: $REDIS_URL"
@@ -80,9 +84,13 @@ echo "Redis URL overridden to use local forwarding: $REDIS_URL"
 echo "Setting up Redis Cloud forwarding..."
 socat TCP-LISTEN:6379,reuseaddr,fork VSOCK-CONNECT:3:6379 &
 
+# Government API forwarding (sandbox.co.in)
+echo "Setting up Government API forwarding..."
+socat TCP-LISTEN:443,reuseaddr,fork VSOCK-CONNECT:3:443 &
+
 echo "External service forwarding configured:"
 echo "  - Redis Cloud -> localhost:6379 -> VSOCK CID 3:6379"
-echo "  - Government API calls will be made directly from enclave to internet"
+echo "  - Government API -> localhost:443 -> VSOCK CID 3:443"
 
 # Listens on Local VSOCK Port 4000 (Rust service) and forwards to localhost 4000
 socat VSOCK-LISTEN:4000,reuseaddr,fork TCP:localhost:4000 &
