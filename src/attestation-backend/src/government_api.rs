@@ -144,6 +144,9 @@ impl JwtManager {
     // Authenticate and get new JWT token
     pub async fn authenticate(&mut self) -> Result<String> {
         info!("Authenticating with government API...");
+        info!("🔧 Auth URL: {}", self.auth_url);
+        info!("🔧 API Key: {}...", &self.api_key[..std::cmp::min(10, self.api_key.len())]);
+        info!("🔧 API Secret: {}...", &self.api_secret[..std::cmp::min(10, self.api_secret.len())]);
 
         let response = self.client
             .post(&self.auth_url)
@@ -154,7 +157,10 @@ impl JwtManager {
             .await?;
 
         if !response.status().is_success() {
-            return Err(anyhow!("Authentication failed: {}", response.status()));
+            let status = response.status();
+            let response_text = response.text().await.unwrap_or_else(|_| "Failed to read response".to_string());
+            error!("🚨 Authentication failed - Status: {}, Response: {}", status, response_text);
+            return Err(anyhow!("Authentication failed: {}", status));
         }
 
         let auth_response: serde_json::Value = response.json().await?;
