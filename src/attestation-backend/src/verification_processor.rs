@@ -333,14 +333,18 @@ impl VerificationProcessor {
                 
                 // Generate signature for the verification
                 let signature = self.generate_verification_signature(message)?;
-                let current_timestamp_ms = chrono::Utc::now().timestamp_millis() as u64;
+                
+                // Parse the original verification timestamp to milliseconds
+                let verification_timestamp_ms = chrono::DateTime::parse_from_rfc3339(&message.verified_at)
+                    .map_err(|e| anyhow!("Failed to parse verified_at timestamp: {}", e))?
+                    .timestamp_millis() as u64;
                 
                 self.call_update_verification_status(
                     &message.user_wallet,
                     &did_id,
                     true, // is_verified = true
                     signature,
-                    current_timestamp_ms,
+                    verification_timestamp_ms,
                     &message.evidence_hash,
                 ).await?;
                 
@@ -519,13 +523,14 @@ impl VerificationProcessor {
 
     fn generate_verification_signature(&self, message: &SuiVerificationMessage) -> Result<Vec<u8>> {
         // Create a payload to sign (matching the format expected by the contract)
+        // Use the original verification timestamp, not current time
         let payload = format!(
             "{}:{}:{}:{}:{}",
             message.user_wallet,
             message.did_id,
             message.result,
             message.evidence_hash,
-            chrono::Utc::now().to_rfc3339()
+            message.verified_at  // Use original verification timestamp
         );
         
         // Sign the payload with the enclave keypair
