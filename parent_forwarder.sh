@@ -20,7 +20,7 @@ echo "Sui VSOCK forwarder started with PID: $SUI_VSOCK_PID"
 
 # Forward VSOCK port 6379 to YOUR Redis Cloud instance
 echo "Setting up VSOCK forwarding for Redis Cloud..."
-/usr/local/bin/socat VSOCK-LISTEN:6379,fork,reuseaddr TCP:redis-18401.c261.us-east-1-4.ec2.redns.redis-cloud.com:18401 &
+/usr/local/bin/socat VSOCK-LISTEN:6379,fork,reuseaddr TCP:redis-14701.crce217.ap-south-1-1.ec2.cloud.redislabs.com:14701 &
 REDIS_VSOCK_PID=$!
 echo "Redis VSOCK forwarder started with PID: $REDIS_VSOCK_PID"
 
