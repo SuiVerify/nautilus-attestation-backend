@@ -69,7 +69,7 @@ export ENCLAVE_MODE=true
 echo "Enclave mode enabled: $ENCLAVE_MODE"
 
 # Override Redis URL to use local forwarding instead of direct Redis Cloud access
-export REDIS_URL="redis://default:8GYkgUdA0XwfqNbdMg5hl6oc1f9wUpH0@localhost:6379"
+export REDIS_URL="redis://default:heBeUZ1x7vA4rRgI04vzS41XTVmxNuSf@localhost:6379"
 echo "Redis URL overridden to use local forwarding: $REDIS_URL"
 
 # Run traffic forwarder in background and start the server
