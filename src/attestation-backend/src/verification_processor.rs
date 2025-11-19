@@ -80,6 +80,9 @@ pub struct VerificationProcessor {
     registry_id: String,
     cap_id: String,
     clock_id: String,
+    // Redis authentication
+    redis_username: String,
+    redis_password: String,
 }
 
 impl VerificationProcessor {
@@ -101,6 +104,12 @@ impl VerificationProcessor {
         
         let client = Client::open(redis_url.as_str())
             .map_err(|e| anyhow!("Failed to create Redis client: {}", e))?;
+
+        // Get Redis authentication credentials
+        let redis_username = std::env::var("REDIS_USERNAME")
+            .unwrap_or_else(|_| "default".to_string());
+        let redis_password = std::env::var("REDIS_PASSWORD")
+            .map_err(|_| anyhow!("REDIS_PASSWORD environment variable is required"))?;
 
         // Initialize government API client
         let government_api = GovernmentApiClient::new()
@@ -125,7 +134,35 @@ impl VerificationProcessor {
                 .unwrap_or_else(|_| "0x9aa20287121e2d325405097c54b5a2519a5d3f745ca74d47358a490dc94914cc".to_string()),
             clock_id: std::env::var("SUI_CLOCK_ID")
                 .unwrap_or_else(|_| "0x0000000000000000000000000000000000000000000000000000000000000006".to_string()),
+            redis_username,
+            redis_password,
         })
+    }
+
+    /// Helper method to get an authenticated Redis connection
+    async fn get_authenticated_connection(&self) -> Result<redis::aio::Connection> {
+        let mut conn = self.redis_client.get_async_connection().await
+            .map_err(|e| anyhow!("Failed to connect to Redis: {}", e))?;
+        
+        // Explicit authentication required for Redis Cloud
+        info!("Authenticating with Redis using username: {}", self.redis_username);
+        let auth_result: RedisResult<String> = redis::cmd("AUTH")
+            .arg(&self.redis_username)
+            .arg(&self.redis_password)
+            .query_async(&mut conn)
+            .await;
+
+        match auth_result {
+            Ok(_) => {
+                info!("Successfully authenticated with Redis");
+            }
+            Err(e) => {
+                error!("Redis authentication failed: {}", e);
+                return Err(anyhow!("Redis authentication failed: {}", e));
+            }
+        }
+        
+        Ok(conn)
     }
 
     pub async fn start_processing(&mut self) -> Result<()> {
@@ -162,8 +199,7 @@ impl VerificationProcessor {
     }
 
     async fn create_consumer_group(&mut self) -> Result<()> {
-        let mut conn = self.redis_client.get_async_connection().await
-            .map_err(|e| anyhow!("Failed to connect to Redis: {}", e))?;
+        let mut conn = self.get_authenticated_connection().await?;
 
         // Try to create consumer group (ignore if it already exists)
         let result: RedisResult<String> = redis::cmd("XGROUP")
@@ -190,8 +226,7 @@ impl VerificationProcessor {
     }
 
     async fn process_pending_messages(&mut self) -> Result<usize> {
-        let mut conn = self.redis_client.get_async_connection().await
-            .map_err(|e| anyhow!("Failed to connect to Redis: {}", e))?;
+        let mut conn = self.get_authenticated_connection().await?;
 
         // Read messages from the stream
         let result: RedisResult<StreamReadReply> = redis::cmd("XREADGROUP")
